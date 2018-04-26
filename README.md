@@ -1,10 +1,15 @@
-# Watson Assistant (formerly Conversation) Sample Application [![Build Status](https://travis-ci.org/watson-developer-cloud/assistant-simple.svg?branch=master)](http://travis-ci.org/watson-developer-cloud/assistant-simple) [![codecov.io](https://codecov.io/github/watson-developer-cloud/assistant-simple/coverage.svg?branch=master)](https://codecov.io/github/watson-developer-cloud/assistant-simple?branch=master)
+# Kermie - a Watson Assistant application
 
-This Node.js app demonstrates the Watson Assistant service in a simple chat interface simulating a cognitive car dashboard.
+To start, please go to the following link (setting up an account if required) and reading through it
 
-![Demo](readme_images/demo.gif)
+https://www.ibm.com/developerworks/library/cc-watson-chatbot-conversation-nlu/index.html
 
-You can view a [demo][demo_url] of this app.
+
+If you would like to start off with a sample project please follow:
+https://console.bluemix.net/docs/runtimes/nodejs/getting-started.html#getting-started-tutorial
+
+
+## The below goes through a generic app setup
 
 ## Before you begin
 
