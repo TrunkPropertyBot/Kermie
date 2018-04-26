@@ -1,5 +1,9 @@
 # Kermie - a Watson Assistant application
 
+Link to our hosted/running Bot:
+http://trunkbot-kermie.mybluemix.net/
+
+
 To start, please go to the following link (setting up an account if required) and reading through it
 
 https://www.ibm.com/developerworks/library/cc-watson-chatbot-conversation-nlu/index.html
