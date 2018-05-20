@@ -19,7 +19,8 @@
 var express = require('express'); // app server
 var bodyParser = require('body-parser'); // parser for post requests
 var watson = require('watson-developer-cloud'); // watson sdk
-
+// var superagent = require('superagent');
+var request = require('superagent-bluebird-promise');
 var app = express();
 
 // Bootstrap application settings
@@ -67,15 +68,25 @@ app.post('/api/message', function(req, res) {
  * @param  {Object} response The response from the Assistant service
  * @return {Object}          The response with the updated message
  */
-function updateMessage(input, response) {
+ function updateMessage(input, response) {
   var responseText = null;
   if (!response.output) {
     response.output = {};
   } else {
+    if(response.intents.length>0){
+    request.get('https://7jk4gr3buj.execute-api.us-east-1.amazonaws.com/trunkfinal/averagerent?suburb=melbourne')
+  .then(function(returnData) {
+    response.output.text = returnData.body[0].average_rent;
+    console.log("New response: "+response.output.text);
+  }, function(error) {
+    console.log(error);
+  });
+}
+    console.log("current response: "+response.output.text);
     return response;
   }
   if (response.intents && response.intents[0]) {
-    var intent = response.intents[0];
+    // var intent = response.intents[0];
     // Depending on the confidence of the response the app can return different messages.
     // The confidence will vary depending on how well the system is trained. The service will always try to assign
     // a class/intent to the input. If the confidence is low, then it suggests the service is unsure of the
@@ -93,4 +104,13 @@ function updateMessage(input, response) {
   return response;
 }
 
+function translate() {
+    superagent.get('https://7jk4gr3buj.execute-api.us-east-1.amazonaws.com/trunkfinal/averagerent')
+    .query({suburb:'melbourne'})
+    .end((err, res) => {
+      if (err) { return console.log(err); }
+      console.log('wo de shu ju'+res.body);
+      return res.body;
+  });     
+}
 module.exports = app;
