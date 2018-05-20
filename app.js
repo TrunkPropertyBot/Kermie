@@ -19,7 +19,6 @@
 var express = require('express'); // app server
 var bodyParser = require('body-parser'); // parser for post requests
 var watson = require('watson-developer-cloud'); // watson sdk
-// var superagent = require('superagent');
 var request = require('superagent-bluebird-promise');
 var app = express();
 
@@ -58,7 +57,10 @@ app.post('/api/message', function(req, res) {
     if (err) {
       return res.status(err.code || 500).json(err);
     }
-    return res.json(updateMessage(payload, data));
+    updateMessage(payload,data)
+    .then( (response) => {
+      return res.json(response);
+    });
   });
 });
 
@@ -68,30 +70,24 @@ app.post('/api/message', function(req, res) {
  * @param  {Object} response The response from the Assistant service
  * @return {Object}          The response with the updated message
  */
- function updateMessage(input, response) {
+ async function updateMessage(input, response) {
   var responseText = null;
   if (!response.output) {
     response.output = {};
-  } else {
-    if(response.intents.length>0){
-    request.get('https://7jk4gr3buj.execute-api.us-east-1.amazonaws.com/trunkfinal/averagerent?suburb=melbourne')
-  .then(function(returnData) {
-    response.output.text = returnData.body[0].average_rent;
-    console.log("New response: "+response.output.text);
-  }, function(error) {
-    console.log(error);
-  });
-}
+  } 
+  else {
+    if(response.intents.length > 0 && response.intents[0].intent === 'averageRent'){
+      try {
+        const apiCall = await request.get(`https://7jk4gr3buj.execute-api.us-east-1.amazonaws.com/trunkfinal/averagerent?suburb=melbourne`)
+        response.output.text = apiCall.body[0].average_rent;
+      } catch(e) {
+        console.log(e);
+      }
+  }
     console.log("current response: "+response.output.text);
     return response;
   }
   if (response.intents && response.intents[0]) {
-    // var intent = response.intents[0];
-    // Depending on the confidence of the response the app can return different messages.
-    // The confidence will vary depending on how well the system is trained. The service will always try to assign
-    // a class/intent to the input. If the confidence is low, then it suggests the service is unsure of the
-    // user's intent . In these cases it is usually best to return a disambiguation message
-    // ('I did not understand your intent, please rephrase your question', etc..)
     if (intent.confidence >= 0.75) {
       responseText = 'I understood your intent was ' + intent.intent;
     } else if (intent.confidence >= 0.5) {
