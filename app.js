@@ -76,14 +76,76 @@ app.post('/api/message', function(req, res) {
     response.output = {};
   } 
   else {
-    if(response.intents.length > 0 && response.intents[0].intent === 'averageRent'){
+    var url = null;
+    
+    // call external API with parameters
+    if(response.intents.length > 0){
+      console.log(response.context.currentContext);
+      if(response.intents[0].intent === 'averageRent'){
+        url = 'https://7jk4gr3buj.execute-api.us-east-1.amazonaws.com/trunkfinal/averagerent?suburb='+response.entities[0].value;
+      }else if(response.context.currentContext === 'property' || response.context.currentContext ==='bedrooms'
+     || response.context.currentContext === 'bathrooms' || response.context.currentContext === 'carparking' && response.context.address){
+       console.log('why' + response.context.address);
+        url = 'https://7jk4gr3buj.execute-api.us-east-1.amazonaws.com/trunkfinal/properties?address='+response.context.address;
+      }else if(response.intents[0].intent === 'inspections'){
+        url = 'https://7jk4gr3buj.execute-api.us-east-1.amazonaws.com/trunkfinal/inspections';
+      }else if(response.intents[0].intent === 'Repairs'){
+        url = 'https://7jk4gr3buj.execute-api.us-east-1.amazonaws.com/trunkfinal/getrepair';
+      }else if(response.context.currentContext === 'publictransport' && response.context.address){
+        url = 'https://7jk4gr3buj.execute-api.us-east-1.amazonaws.com/trunkfinal/gettransport?address='+response.context.address;
+      }else if(response.context.currentContext === 'tenant' && response.context.address){
+        url = 'https://7jk4gr3buj.execute-api.us-east-1.amazonaws.com/trunkfinal/gettenants?address='+response.context.address;
+      }else if(response.context.currentContext === 'landlord' && response.context.address){
+        url = 'https://7jk4gr3buj.execute-api.us-east-1.amazonaws.com/trunkfinal/getlandlord?address='+response.context.address;
+      }
+      // Average rent API
+      console.log(url);
+
+      if(url != null){
       try {
-        const apiCall = await request.get(`https://7jk4gr3buj.execute-api.us-east-1.amazonaws.com/trunkfinal/averagerent?suburb=melbourne`)
-        response.output.text = apiCall.body[0].average_rent;
+        const apiCall = await request.get(url);
+        // Average rent response
+      if(response.intents[0].intent === 'averageRent'){
+        response.output.text = 'The average rent for '+response.entities[0].value+' is $'+apiCall.body[0].average_rent+ ' per week';
+        }else if(response.context.currentContext === 'property'){
+        var property = apiCall.body[0];
+        response.output.text = 'Address: '+property.address + ' Bedrooms: '+property.bedrooms +' Bathrooms: '+property.bathrooms +' Carspaces: '
+        +property.carspaces + ' Description: '+property.description;
+        }else if(response.context.currentContext === 'bedrooms'){
+          response.output.text = 'The property has '+ apiCall.body[0].bedrooms +' bedrooms.';
+        }else if(response.context.currentContext  === 'bathrooms'){
+          response.output.text = 'The property has '+apiCall.body[0].bathrooms+' bathrooms, one of them is an en-suite to the master bedroom.';
+        }else if(response.context.currentContext === 'carparking'){
+          response.output.text = 'The property at '+apiCall.body[0].address+' has '+apiCall.body[0].carspaces+' private car parking space, it also has some available street parking.';
+        }else  if(response.intents[0].intent === 'inspections'){
+          response.output.text = 'You have '+apiCall.body.length+ ' inspections: ';
+          apiCall.body.forEach(element => {
+            response.output.text += element.id +'. '+'Date: '+element.date.substring(0,10) +' Time: '+
+            element.time.substring(0,5)+' Address: '+element.address+ ' ';
+          });
+          }else if(response.intents[0].intent === 'Repairs'){
+            response.output.text = 'You need to chase up ';
+            apiCall.body.forEach(element => {
+              response.output.text += 'Address: '+element.address + ' Issue: '+element.repairs+' ';
+            });
+          }else if(response.context.currentContext === 'publictransport'){
+            response.output.text = apiCall.body[0].transport;
+          }else if(response.context.currentContext === 'tenant'){
+            if(apiCall.body[0].tenants != null){
+              response.output.text ='The property is leased by '+apiCall.body[0].tenants;
+            }else{
+              response.output.text = 'Currently there is no tenants at '+response.context.address;
+            }
+          }else if(response.context.currentContext === 'landlord'){
+            response.output.text  = 'The landlord for '+response.context.address+' is '+apiCall.body[0].landlord;
+          }
+      
       } catch(e) {
         console.log(e);
       }
+    }
   }
+
     console.log("current response: "+response.output.text);
     return response;
   }
@@ -98,15 +160,5 @@ app.post('/api/message', function(req, res) {
   }
   response.output.text = responseText;
   return response;
-}
-
-function translate() {
-    superagent.get('https://7jk4gr3buj.execute-api.us-east-1.amazonaws.com/trunkfinal/averagerent')
-    .query({suburb:'melbourne'})
-    .end((err, res) => {
-      if (err) { return console.log(err); }
-      console.log('wo de shu ju'+res.body);
-      return res.body;
-  });     
 }
 module.exports = app;
